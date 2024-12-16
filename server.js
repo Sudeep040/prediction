@@ -1,10 +1,12 @@
 const express = require("express");
 const bodyParser = require("body-parser");
+const cors = require("cors"); // Import the cors package
 const { processCSV } = require("./dataProcessor");
 const KNN = require("ml-knn");
 
 const app = express();
 app.use(bodyParser.json());
+app.use(cors()); // Enable CORS for all routes
 
 let knn7Day, knn28Day;
 
@@ -23,13 +25,11 @@ processCSV("2500 Concrete design mixes.csv")
         // Train the KNN models
         knn7Day = new KNN(trainingData, target7Day, { k: 3 });
         knn28Day = new KNN(trainingData, target28Day, { k: 3 });
-        console.log(knn7Day,knn28Day)
         console.log("KNN models trained successfully!");
     })
     .catch((error) => {
         console.error("Error processing CSV:", error.message);
     });
-
 
 // Endpoint to predict 7-day and 28-day strength
 app.post("/predict-strength", (req, res) => {
@@ -45,11 +45,10 @@ app.post("/predict-strength", (req, res) => {
     }
 
     const inputData = [typeCoarseAgg, typeFineAgg, cementOpc, sizeCoarseAgg];
-    console.log(knn7Day.predict([inputData]))
+
     try {
         const predicted7Day = knn7Day.predict([inputData])[0];
         const predicted28Day = knn28Day.predict([inputData])[0];
-        console.log(predicted7Day, predicted28Day)
         res.json({ predicted7Day, predicted28Day });
     } catch (error) {
         res.status(500).json({ error: "Error making predictions." });
