@@ -13,10 +13,6 @@ let knn7Day, knn28Day;
 // Load the CSV data and train the models on server start
 processCSV("2500 Concrete design mixes.csv")
     .then(({ trainingData, target7Day, target28Day }) => {
-        console.log("Training Data:", trainingData);
-        console.log("Target 7-Day Strength:", target7Day);
-        console.log("Target 28-Day Strength:", target28Day);
-
         // Ensure the arrays are not empty
         if (trainingData.length === 0 || target7Day.length === 0 || target28Day.length === 0) {
             throw new Error("Training data or target arrays are empty. Check your CSV file or parsing logic.");
@@ -33,18 +29,20 @@ processCSV("2500 Concrete design mixes.csv")
 
 // Endpoint to predict 7-day and 28-day strength
 app.post("/predict-strength", (req, res) => {
-    const { typeCoarseAgg, typeFineAgg, cementOpc, sizeCoarseAgg } = req.body;
+    const { typeCoarseAgg, typeFineAgg, cementOpc, sizeCoarseAgg, waterContent, wcRatio } = req.body;
 
     if (
         typeCoarseAgg === undefined ||
         typeFineAgg === undefined ||
         cementOpc === undefined ||
-        sizeCoarseAgg === undefined
+        sizeCoarseAgg === undefined ||
+        waterContent === undefined ||
+        wcRatio === undefined
     ) {
         return res.status(400).json({ error: "Missing required input fields." });
     }
 
-    const inputData = [typeCoarseAgg, typeFineAgg, cementOpc, sizeCoarseAgg];
+    const inputData = [typeCoarseAgg, typeFineAgg, cementOpc, sizeCoarseAgg, waterContent, wcRatio];
 
     try {
         const predicted7Day = knn7Day.predict([inputData])[0];
