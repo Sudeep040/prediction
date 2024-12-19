@@ -8,19 +8,17 @@ const app = express();
 app.use(bodyParser.json());
 app.use(cors()); // Enable CORS for all routes
 
-let knn7Day, knn28Day;
+let knn7Day;
 
 // Load the CSV data and train the models on server start
 processCSV("2500 Concrete design mixes.csv")
-    .then(({ trainingData, target7Day, target28Day }) => {
+    .then(({ trainingData, target7Day, }) => {
         // Ensure the arrays are not empty
-        if (trainingData.length === 0 || target7Day.length === 0 || target28Day.length === 0) {
+        if (trainingData.length === 0 || target7Day.length === 0) {
             throw new Error("Training data or target arrays are empty. Check your CSV file or parsing logic.");
         }
-
         // Train the KNN models
         knn7Day = new KNN(trainingData, target7Day, { k: 3 });
-        knn28Day = new KNN(trainingData, target28Day, { k: 3 });
         console.log("KNN models trained successfully!");
     })
     .catch((error) => {
@@ -46,8 +44,7 @@ app.post("/predict-strength", (req, res) => {
 
     try {
         const predicted7Day = knn7Day.predict([inputData])[0];
-        const predicted28Day = knn28Day.predict([inputData])[0];
-        res.json({ predicted7Day, predicted28Day });
+        res.json({ predicted7Day });
     } catch (error) {
         res.status(500).json({ error: "Error making predictions." });
     }
